@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Matriz de Reserva com Pagamento</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      max-width: 500px;
+      margin: 0 auto 20px;
+    }
+
+    .cell {
+      background: #e0e0e0;
+      padding: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .cell:hover {
+      background: #d0d0d0;
+    }
+
+    .selected {
+      background: #ffd54f;
+    }
+
+    .reserved {
+      background: #81c784;
+      cursor: not-allowed;
+    }
+
+    #confirmBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #confirmBtn:disabled {
+      background-color: #90caf9;
+      cursor: not-allowed;
+    }
+
+    #qrcode {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #qrcode img {
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Reserva de Números</h1>
+  <div id="grid"></div>
+  <button id="confirmBtn" disabled>Confirmar Reserva</button>
+
+  <div id="qrcode">
+    <h2>Escaneie o QR Code para pagar sua aposta</h2>
+    <img id="qrImage" src="" alt="QR Code de Pagamento" />
+    <p><strong>Valor:</strong> R$ 10,00</p>
+  </div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const qrCodeDiv = document.getElementById('qrcode');
+    const qrImage = document.getElementById('qrImage');
+    let selectedNumber = null;
+    let reservedNumbers = JSON.parse(localStorage.getItem('reservedNumbers')) || [];
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      for (let i = 0; i <= 100; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.textContent = i;
+
+        if (reservedNumbers.includes(i)) {
+          cell.classList.add('reserved');
+        }
+
+        cell.addEventListener('click', () => {
+          if (reservedNumbers.includes(i)) return;
+
+          const previouslySelected = document.querySelector('.cell.selected');
+          if (previouslySelected) previouslySelected.classList.remove('selected');
+
+          cell.classList.add('selected');
+          selectedNumber = i;
+          confirmBtn.disabled = false;
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    confirmBtn.addEventListener('click', () => {
+      if (selectedNumber !== null) {
+        reservedNumbers.push(selectedNumber);
+        localStorage.setItem('reservedNumbers', JSON.stringify(reservedNumbers));
+        confirmBtn.disabled = true;
+        renderGrid();
+
+        // Exibe o QR code fictício
+        const valor = 10.00;
+        const fakeQRCodeAPI = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=pagamento_numero_${selectedNumber}_valor_R${valor.toFixed(2)}`;
+        qrImage.src = fakeQRCodeAPI;
+        qrCodeDiv.style.display = 'block';
+
+        alert('Número reservado com sucesso! Escaneie o QR Code para pagar.');
+      }
+    });
+
+    renderGrid();
+  </script>
+</body>
+</html>
